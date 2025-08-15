@@ -4,11 +4,12 @@ const DYNAMIC_CACHE = ‘habits-dynamic-v1.0.0’;
 
 // Assets to cache on install
 const STATIC_ASSETS = [
-‘/’,
-‘/index.html’,
-‘/manifest.json’,
-‘/icons/icon-192x192.png’,
-‘/icons/icon-512x512.png’
+‘./’,
+‘./index.html’,
+‘./manifest.json’,
+‘./icons/icon-192x192.png’,
+‘./icons/icon-512x512.png’,
+‘./icons/icon-180x180.png’
 ];
 
 // Install event - cache static assets
@@ -103,7 +104,7 @@ return response;
         
         // Return offline page for navigation requests
         if (request.destination === 'document') {
-          return caches.match('/');
+          return caches.match('./');
         }
         
         // For other requests, you could return a default offline resource
