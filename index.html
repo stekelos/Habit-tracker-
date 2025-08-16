@@ -302,6 +302,26 @@
         font-weight: bold;
         color: #2563eb;
     }
+
+    /* Reset Button Style */
+    .reset-btn-container {
+        text-align: center;
+        margin: 35px 0 0 0;
+    }
+    .reset-btn {
+        padding: 12px 32px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+    .reset-btn:hover {
+        background: #b91c1c;
+    }
 </style>
 
 </head>
@@ -370,6 +390,10 @@
         </div>
     </div>
 
+    <!-- Reset Button Section -->
+    <div class="reset-btn-container">
+        <button class="reset-btn" onclick="askReset()">Reset All Habits</button>
+    </div>
 </div>
 
 <div class="install-prompt" id="installPrompt">
@@ -625,6 +649,24 @@
         document.getElementById('daysTrackedWeek').textContent = daysTrackedWeek;
         document.getElementById('completedMonth').textContent = completedMonth;
         document.getElementById('daysTrackedMonth').textContent = daysTrackedMonth;
+    }
+
+    // ======== RESET FUNCTIONALITY ==========
+    function askReset() {
+        if (confirm('Θέλεις πραγματικά να κάνεις επαναφορά όλων των συνηθειών; Όλα θα διαγραφούν οριστικά!')) {
+            resetHabits();
+        }
+    }
+
+    function resetHabits() {
+        habits = [];
+        habitHistory = {};
+        localStorage.removeItem('habits');
+        localStorage.removeItem('habitHistory');
+        localStorage.removeItem('lastCheck');
+        renderHabits();
+        updateStats();
+        updateExtendedStats();
     }
 </script>
 
