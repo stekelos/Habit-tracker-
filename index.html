@@ -11,7 +11,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Habits Tracker">
 
-```
 <style>
     * {
         margin: 0;
@@ -174,6 +173,7 @@
         padding: 20px;
         border-radius: 12px;
         text-align: center;
+        margin-bottom: 20px;
     }
 
     .stats h3 {
@@ -261,8 +261,48 @@
         padding: 4px 8px !important;
         margin-left: auto;
     }
+
+    /* Week and Month Stats */
+    .extended-stats {
+        background: #f1f5f9;
+        padding: 18px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    .extended-stats h3 {
+        color: #2563eb;
+        font-size: 1.1em;
+        margin-bottom: 12px;
+    }
+    .extended-stats .stat-row {
+        display: flex;
+        justify-content: space-around;
+        gap: 14px;
+        margin-bottom: 10px;
+    }
+    .extended-stats .stat-row:last-child {
+        margin-bottom: 0;
+    }
+    .extended-stats .stat-box {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        flex: 1;
+        padding: 12px;
+        min-width: 90px;
+    }
+    .extended-stats .stat-label {
+        font-size: 0.95em;
+        color: #666;
+        margin-bottom: 2px;
+    }
+    .extended-stats .stat-number {
+        font-size: 1.45em;
+        font-weight: bold;
+        color: #2563eb;
+    }
 </style>
-```
 
 </head>
 <body>
@@ -272,7 +312,6 @@
             <p>Build better habits, one day at a time</p>
         </div>
 
-```
     <div class="date-display">
         <strong id="currentDate"></strong>
     </div>
@@ -305,6 +344,32 @@
             </div>
         </div>
     </div>
+
+    <!-- Week & Month Stats -->
+    <div class="extended-stats">
+        <h3>📅 Weekly & Monthly Stats</h3>
+        <div class="stat-row">
+            <div class="stat-box">
+                <div class="stat-label">Completed this week</div>
+                <div class="stat-number" id="completedWeek">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Days tracked this week</div>
+                <div class="stat-number" id="daysTrackedWeek">0</div>
+            </div>
+        </div>
+        <div class="stat-row">
+            <div class="stat-box">
+                <div class="stat-label">Completed this month</div>
+                <div class="stat-number" id="completedMonth">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Days tracked this month</div>
+                <div class="stat-number" id="daysTrackedMonth">0</div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <div class="install-prompt" id="installPrompt">
@@ -330,12 +395,16 @@
     let habits = JSON.parse(localStorage.getItem('habits') || '[]');
     let deferredPrompt;
 
+    // Tracking completion history
+    let habitHistory = JSON.parse(localStorage.getItem('habitHistory') || '{}');
+
     // Initialize app
     document.addEventListener('DOMContentLoaded', function() {
         updateDate();
         renderHabits();
         updateStats();
-        
+        updateExtendedStats();
+
         // Enter key support
         document.getElementById('habitInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -395,7 +464,8 @@
         saveHabits();
         renderHabits();
         updateStats();
-        
+        updateExtendedStats();
+
         input.value = '';
     }
 
@@ -404,7 +474,6 @@
         if (!habit) return;
         
         const today = new Date().toDateString();
-        
         if (habit.completed) {
             habit.completed = false;
             habit.streak = Math.max(0, habit.streak - 1);
@@ -413,18 +482,21 @@
             habit.lastCompleted = today;
             habit.streak += 1;
         }
-        
         saveHabits();
+        saveHabitHistory();
         renderHabits();
         updateStats();
+        updateExtendedStats();
     }
 
     function deleteHabit(id) {
         if (confirm('Are you sure you want to delete this habit?')) {
             habits = habits.filter(h => h.id !== id);
             saveHabits();
+            saveHabitHistory();
             renderHabits();
             updateStats();
+            updateExtendedStats();
         }
     }
 
@@ -464,6 +536,17 @@
         localStorage.setItem('habits', JSON.stringify(habits));
     }
 
+    function saveHabitHistory() {
+        // Keep a history of completed habits for date-based stats
+        const today = new Date();
+        const isoDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
+        habitHistory[isoDate] = habits.map(h => ({
+            id: h.id,
+            completed: h.completed
+        }));
+        localStorage.setItem('habitHistory', JSON.stringify(habitHistory));
+    }
+
     // Reset completion status daily (simplified version)
     function checkNewDay() {
         const today = new Date().toDateString();
@@ -476,14 +559,73 @@
                 }
             });
             saveHabits();
+            saveHabitHistory();
             localStorage.setItem('lastCheck', today);
             renderHabits();
             updateStats();
+            updateExtendedStats();
         }
     }
 
     // Check for new day every time app loads
     checkNewDay();
+
+    // --- Extended stats: weekly & monthly ---
+    function updateExtendedStats() {
+        // Get today
+        const today = new Date();
+        const isoToday = today.toISOString().split('T')[0];
+
+        // Helper to get last N days in YYYY-MM-DD
+        function getPastDates(numDays) {
+            let dates = [];
+            for (let i = 0; i < numDays; i++) {
+                let d = new Date(today);
+                d.setDate(today.getDate() - i);
+                dates.push(d.toISOString().split('T')[0]);
+            }
+            return dates;
+        }
+
+        // Helper to get all days this month
+        function getMonthDates(dt) {
+            let year = dt.getFullYear(), month = dt.getMonth();
+            let dates = [];
+            let d = new Date(year, month, 1);
+            while (d.getMonth() === month) {
+                dates.push(d.toISOString().split('T')[0]);
+                d.setDate(d.getDate() + 1);
+            }
+            return dates;
+        }
+
+        // Week stats
+        const weekDates = getPastDates(7);
+        let completedWeek = 0;
+        let daysTrackedWeek = 0;
+        weekDates.forEach(dateStr => {
+            if (habitHistory[dateStr]) {
+                daysTrackedWeek++;
+                completedWeek += habitHistory[dateStr].filter(h => h.completed).length;
+            }
+        });
+
+        // Month stats
+        const monthDates = getMonthDates(today);
+        let completedMonth = 0;
+        let daysTrackedMonth = 0;
+        monthDates.forEach(dateStr => {
+            if (habitHistory[dateStr]) {
+                daysTrackedMonth++;
+                completedMonth += habitHistory[dateStr].filter(h => h.completed).length;
+            }
+        });
+
+        document.getElementById('completedWeek').textContent = completedWeek;
+        document.getElementById('daysTrackedWeek').textContent = daysTrackedWeek;
+        document.getElementById('completedMonth').textContent = completedMonth;
+        document.getElementById('daysTrackedMonth').textContent = daysTrackedMonth;
+    }
 </script>
 
 <!-- Manifest and Service Worker files would be separate files -->
@@ -501,12 +643,12 @@
         "categories": ["productivity", "lifestyle", "health"],
         "icons": [
             {
-                "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iNDAiIGZpbGw9IiMyNTYzZWIiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik05IDEyTDExIDE0TDE1IDEwTTIxIDEyQzIxIDE2Ljk3MDYgMTYuOTcwNiAyMSAxMiAyMUM3LjAyOTQ0IDIxIDMgMTYuOTcwNiAzIDEyQzMgNy4wMjk0NCA3LjAyOTQ0IDMgMTIgM0MxNi45NzA2IDMgMjEgNy4wMjk0NCAyMSAxMloiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4KPC9zdmc+",
+                "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPS[...]
                 "sizes": "192x192",
                 "type": "image/svg+xml"
             },
             {
-                "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTA0IiBmaWxsPSIjMjU2M2ViIi8+CjxzdmcgeD0iMTI4IiB5PSIxMjgiIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IndoaXRlIj4KPHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4KPC9zdmc+",
+                "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPS[...]
                 "sizes": "512x512",
                 "type": "image/svg+xml"
             }
@@ -546,7 +688,6 @@
     console.log('Manifest content:', manifestContent);
     console.log('Service Worker content ready');
 </script>
-```
 
 </body>
 </html>
