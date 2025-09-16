@@ -1,735 +1,489 @@
 <!DOCTYPE html>
-
-<html lang="en">
+<html lang="el">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Habits Tracker</title>
+    <title>Στοιχηματικό Ημερολόγιο </title>
+    <meta name="description" content="Καταγραφή στοιχημάτων με μόνιμη αποθήκευση .paw">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563eb">
+
+    <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Habits Tracker">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Betting.paw">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icon-192.png">
 
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+    <style>
+        :root {
+            --primary: #6e12f0;
+            --secondary: #ff3e78;
+            --bg: #fafafa;
+            --text: #333;
+            --success: #28a745;
+            --danger: #dc3545;
+        }
 
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        color: #333;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    .container {
-        max-width: 400px;
-        margin: 0 auto;
-        padding: 20px;
-        min-height: 100vh;
-        background: white;
-        box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 16px;
+            line-height: 1.6;
+        }
 
-    .header {
-        text-align: center;
-        margin-bottom: 30px;
-        padding: 20px 0;
-    }
-
-    .header h1 {
-        color: #2563eb;
-        font-size: 2.2em;
-        margin-bottom: 10px;
-    }
-
-    .header p {
-        color: #666;
-        font-size: 1.1em;
-    }
-
-    .date-display {
-        background: #f8fafc;
-        padding: 15px;
-        border-radius: 12px;
-        text-align: center;
-        margin-bottom: 25px;
-        border: 2px solid #e2e8f0;
-    }
-
-    .add-habit {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 25px;
-    }
-
-    .add-habit input {
-        flex: 1;
-        padding: 12px;
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 16px;
-    }
-
-    .add-habit input:focus {
-        outline: none;
-        border-color: #2563eb;
-    }
-
-    .add-habit button {
-        padding: 12px 20px;
-        background: #2563eb;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: 600;
-    }
-
-    .add-habit button:hover {
-        background: #1d4ed8;
-    }
-
-    .habits-list {
-        margin-bottom: 30px;
-    }
-
-    .habit-item {
-        background: #f8fafc;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        transition: all 0.3s ease;
-    }
-
-    .habit-item.completed {
-        background: #dcfce7;
-        border-color: #16a34a;
-    }
-
-    .habit-checkbox {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        border: 3px solid #cbd5e1;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-    }
-
-    .habit-checkbox.checked {
-        background: #16a34a;
-        border-color: #16a34a;
-        color: white;
-    }
-
-    .habit-checkbox:before {
-        content: '✓';
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .habit-checkbox.checked:before {
-        opacity: 1;
-    }
-
-    .habit-text {
-        flex: 1;
-        font-size: 16px;
-        font-weight: 500;
-    }
-
-    .habit-streak {
-        background: #fef3c7;
-        color: #92400e;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .delete-btn {
-        background: #ef4444;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 6px 10px;
-        cursor: pointer;
-        font-size: 12px;
-    }
-
-    .stats {
-        background: #f1f5f9;
-        padding: 20px;
-        border-radius: 12px;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    .stats h3 {
-        color: #2563eb;
-        margin-bottom: 15px;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-    }
-
-    .stat-item {
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-    }
-
-    .stat-number {
-        font-size: 1.8em;
-        font-weight: bold;
-        color: #2563eb;
-    }
-
-    .stat-label {
-        color: #666;
-        font-size: 0.9em;
-        margin-top: 5px;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        color: #666;
-    }
-
-    .empty-state svg {
-        width: 64px;
-        height: 64px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-    }
-
-    @media (max-width: 480px) {
         .container {
-            padding: 15px;
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-        
-        .header h1 {
-            font-size: 1.8em;
+
+        h1 {
+            text-align: center;
+            margin-bottom: 24px;
+            color: var(--primary);
         }
-    }
 
-    /* PWA Install prompt */
-    .install-prompt {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        right: 20px;
-        background: #2563eb;
-        color: white;
-        padding: 15px;
-        border-radius: 12px;
-        display: none;
-        align-items: center;
-        gap: 15px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
+        .form-group {
+            margin-bottom: 16px;
+        }
 
-    .install-prompt button {
-        background: white;
-        color: #2563eb;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-    }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
 
-    .close-prompt {
-        background: none !important;
-        color: white !important;
-        padding: 4px 8px !important;
-        margin-left: auto;
-    }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
 
-    /* Week and Month Stats */
-    .extended-stats {
-        background: #f1f5f9;
-        padding: 18px;
-        border-radius: 12px;
-        margin-bottom: 25px;
-        text-align: center;
-    }
-    .extended-stats h3 {
-        color: #2563eb;
-        font-size: 1.1em;
-        margin-bottom: 12px;
-    }
-    .extended-stats .stat-row {
-        display: flex;
-        justify-content: space-around;
-        gap: 14px;
-        margin-bottom: 10px;
-    }
-    .extended-stats .stat-row:last-child {
-        margin-bottom: 0;
-    }
-    .extended-stats .stat-box {
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        flex: 1;
-        padding: 12px;
-        min-width: 90px;
-    }
-    .extended-stats .stat-label {
-        font-size: 0.95em;
-        color: #666;
-        margin-bottom: 2px;
-    }
-    .extended-stats .stat-number {
-        font-size: 1.45em;
-        font-weight: bold;
-        color: #2563eb;
-    }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
 
-    /* Reset Button Style */
-    .reset-btn-container {
-        text-align: center;
-        margin: 35px 0 0 0;
-    }
-    .reset-btn {
-        padding: 12px 32px;
-        background: #ef4444;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 18px;
-        font-weight: 600;
-        transition: background 0.2s;
-    }
-    .reset-btn:hover {
-        background: #b91c1c;
-    }
-</style>
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
 
+        button:hover {
+            background: #5a0fcf;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #e02d67;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .profit { color: var(--success); font-weight: bold; }
+        .loss { color: var(--danger); font-weight: bold; }
+
+        .stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 24px 0;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .stat-label { font-weight: 600; }
+        .stat-value.profit { color: var(--success); }
+        .stat-value.loss { color: var(--danger); }
+
+        .delete-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .actions button {
+            flex: 1;
+        }
+
+        #installButton {
+            display: none;
+            background: #28a745;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 16px; }
+            th, td { font-size: 14px; padding: 8px; }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>📝 Daily Habits</h1>
-            <p>Build better habits, one day at a time</p>
+        <h1>🐾 Στοιχηματικό </h1>
+
+        <div class="form-group">
+            <label for="date">Ημερομηνία:</label>
+            <input type="date" id="date" required>
         </div>
 
-    <div class="date-display">
-        <strong id="currentDate"></strong>
-    </div>
-
-    <div class="add-habit">
-        <input type="text" id="habitInput" placeholder="Add a new habit..." maxlength="50">
-        <button onclick="addHabit()">Add</button>
-    </div>
-
-    <div class="habits-list" id="habitsList">
-        <div class="empty-state" id="emptyState">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            <h3>No habits yet!</h3>
-            <p>Add your first habit to get started on your journey to better daily routines.</p>
+        <div class="form-group">
+            <label for="stake">Ποντάρισμα (€):</label>
+            <input type="number" id="stake" step="0.01" min="0.01" placeholder="π.χ. 10.50" required>
         </div>
-    </div>
 
-    <div class="stats">
-        <h3>📊 Your Progress</h3>
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-number" id="totalHabits">0</div>
-                <div class="stat-label">Total Habits</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="completedToday">0</div>
-                <div class="stat-label">Completed Today</div>
-            </div>
+        <div class="form-group">
+            <label for="profit">Κέρδος/Ζημία (€):</label>
+            <input type="number" id="profit" step="0.01" placeholder="π.χ. 15.75 ή -10.50" required>
         </div>
-    </div>
 
-    <!-- Week & Month Stats -->
-    <div class="extended-stats">
-        <h3>📅 Weekly & Monthly Stats</h3>
-        <div class="stat-row">
-            <div class="stat-box">
-                <div class="stat-label">Completed this week</div>
-                <div class="stat-number" id="completedWeek">0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Days tracked this week</div>
-                <div class="stat-number" id="daysTrackedWeek">0</div>
-            </div>
+        <button id="addBtn">Προσθήκη Στοιχήματος</button>
+
+        <div class="actions">
+            <button id="exportBtn" class="btn-secondary">💾 Εξαγωγή .paw</button>
+            <button id="importBtn" class="btn-secondary">📂 Εισαγωγή .paw</button>
         </div>
-        <div class="stat-row">
-            <div class="stat-box">
-                <div class="stat-label">Completed this month</div>
-                <div class="stat-number" id="completedMonth">0</div>
+
+        <input type="file" id="fileInput" accept=".paw" style="display: none">
+
+        <div class="stats" id="statsBox">
+            <h3>📈 Στατιστικά</h3>
+            <div class="stat-row">
+                <span class="stat-label">Σύνολο Στοιχημάτων:</span>
+                <span class="stat-value" id="totalBets">0</span>
             </div>
-            <div class="stat-box">
-                <div class="stat-label">Days tracked this month</div>
-                <div class="stat-number" id="daysTrackedMonth">0</div>
+            <div class="stat-row">
+                <span class="stat-label">Συνολικό Κέρδος:</span>
+                <span class="stat-value" id="totalProfit">€0.00</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Συνολικό Ποντάρισμα:</span>
+                <span class="stat-value" id="totalStake">€0.00</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">ROI:</span>
+                <span class="stat-value" id="roi">0%</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Μέσο Κέρδος/Ζημία:</span>
+                <span class="stat-value" id="avgProfit">€0.00</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Νικηφόρα:</span>
+                <span class="stat-value" id="wins">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Ποσοστό Επιτυχίας:</span>
+                <span class="stat-value" id="winRate">0%</span>
             </div>
         </div>
+
+        <h3>📋 Ιστορικό</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ημερομηνία</th>
+                    <th>Ποντάρισμα</th>
+                    <th>Κέρδος</th>
+                    <th>Δράση</th>
+                </tr>
+            </thead>
+            <tbody id="betsList"></tbody>
+        </table>
+
+        <button id="installButton">➕ Εγκατάσταση Εφαρμογής</button>
     </div>
 
-    <!-- Reset Button Section -->
-    <div class="reset-btn-container">
-        <button class="reset-btn" onclick="askReset()">Reset All Habits</button>
-    </div>
-</div>
+    <script>
+        let db;
 
-<div class="install-prompt" id="installPrompt">
-    <div>
-        <strong>Install Daily Habits</strong><br>
-        <small>Add to your home screen for quick access</small>
-    </div>
-    <button onclick="installApp()">Install</button>
-    <button class="close-prompt" onclick="hideInstallPrompt()">×</button>
-</div>
+        const request = indexedDB.open('BettingPAW', 1);
 
-<script>
-    // Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(registration => console.log('SW registered'))
-                .catch(error => console.log('SW registration failed'));
-        });
-    }
+        request.onerror = () => {
+            console.error('IndexedDB error:', request.error);
+            alert('Σφάλμα αποθήκευσης. Η εφαρμογή μπορεί να μη λειτουργεί σωστά.');
+        };
 
-    // App state
-    let habits = JSON.parse(localStorage.getItem('habits') || '[]');
-    let deferredPrompt;
-
-    // Tracking completion history
-    let habitHistory = JSON.parse(localStorage.getItem('habitHistory') || '{}');
-
-    // Initialize app
-    document.addEventListener('DOMContentLoaded', function() {
-        updateDate();
-        renderHabits();
-        updateStats();
-        updateExtendedStats();
-
-        // Enter key support
-        document.getElementById('habitInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addHabit();
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains('bets')) {
+                const store = db.createObjectStore('bets', { keyPath: 'id', autoIncrement: true });
+                store.createIndex('date', 'date', { unique: false });
             }
-        });
-    });
+        };
 
-    // PWA Install
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        document.getElementById('installPrompt').style.display = 'flex';
-    });
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadBets();
+            updateStats();
+        };
 
-    function installApp() {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((result) => {
-                deferredPrompt = null;
-                hideInstallPrompt();
+        function addBet(date, stake, profit) {
+            const transaction = db.transaction(['bets'], 'readwrite');
+            const store = transaction.objectStore('bets');
+
+            store.add({
+                date,
+                stake: parseFloat(stake),
+                profit: parseFloat(profit),
+                createdAt: new Date().toISOString()
+            });
+
+            transaction.oncomplete = () => {
+                loadBets();
+                updateStats();
+            };
+        }
+
+        function deleteBet(id) {
+            const transaction = db.transaction(['bets'], 'readwrite');
+            const store = transaction.objectStore('bets');
+            store.delete(id);
+
+            transaction.oncomplete = () => {
+                loadBets();
+                updateStats();
+            };
+        }
+
+        function loadBets() {
+            const transaction = db.transaction(['bets'], 'readonly');
+            const store = transaction.objectStore('bets');
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                renderBets(request.result);
+            };
+        }
+
+        function renderBets(bets) {
+            const list = document.getElementById('betsList');
+            list.innerHTML = '';
+
+            bets.forEach(bet => {
+                const row = document.createElement('tr');
+                const profitClass = bet.profit >= 0 ? 'profit' : 'loss';
+                const profitText = bet.profit >= 0 ? `+${bet.profit.toFixed(2)}€` : `${bet.profit.toFixed(2)}€`;
+
+                row.innerHTML = `
+                    <td>${bet.date}</td>
+                    <td>${bet.stake.toFixed(2)}€</td>
+                    <td class="${profitClass}">${profitText}</td>
+                    <td><button class="delete-btn" data-id="${bet.id}">🗑️</button></td>
+                `;
+                list.appendChild(row);
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.getAttribute('data-id'));
+                    deleteBet(id);
+                });
             });
         }
-    }
 
-    function hideInstallPrompt() {
-        document.getElementById('installPrompt').style.display = 'none';
-    }
+        function updateStats() {
+            const transaction = db.transaction(['bets'], 'readonly');
+            const store = transaction.objectStore('bets');
+            const request = store.getAll();
 
-    function updateDate() {
-        const today = new Date();
-        const options = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        };
-        document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', options);
-    }
+            request.onsuccess = () => {
+                const bets = request.result;
+                const totalBets = bets.length;
+                const totalProfit = bets.reduce((sum, bet) => sum + bet.profit, 0);
+                const totalStake = bets.reduce((sum, bet) => sum + bet.stake, 0);
+                const wins = bets.filter(bet => bet.profit > 0).length;
+                const winRate = totalBets > 0 ? ((wins / totalBets) * 100).toFixed(1) : 0;
+                const roi = totalStake > 0 ? ((totalProfit / totalStake) * 100).toFixed(2) : 0;
+                const avgProfit = totalBets > 0 ? (totalProfit / totalBets).toFixed(2) : 0;
 
-    function addHabit() {
-        const input = document.getElementById('habitInput');
-        const habitText = input.value.trim();
-        
-        if (habitText === '') return;
-        
-        const habit = {
-            id: Date.now(),
-            text: habitText,
-            completed: false,
-            streak: 0,
-            lastCompleted: null,
-            createdDate: new Date().toDateString()
-        };
-        
-        habits.push(habit);
-        saveHabits();
-        renderHabits();
-        updateStats();
-        updateExtendedStats();
-
-        input.value = '';
-    }
-
-    function toggleHabit(id) {
-        const habit = habits.find(h => h.id === id);
-        if (!habit) return;
-        
-        const today = new Date().toDateString();
-        if (habit.completed) {
-            habit.completed = false;
-            habit.streak = Math.max(0, habit.streak - 1);
-        } else {
-            habit.completed = true;
-            habit.lastCompleted = today;
-            habit.streak += 1;
+                document.getElementById('totalBets').textContent = totalBets;
+                document.getElementById('totalProfit').textContent = totalProfit >= 0 ? 
+                    `+${totalProfit.toFixed(2)}€` : `${totalProfit.toFixed(2)}€`;
+                document.getElementById('totalProfit').className = totalProfit >= 0 ? 'profit' : 'loss';
+                document.getElementById('totalStake').textContent = `${totalStake.toFixed(2)}€`;
+                document.getElementById('roi').textContent = `${roi}%`;
+                document.getElementById('avgProfit').textContent = `${avgProfit}€`;
+                document.getElementById('wins').textContent = wins;
+                document.getElementById('winRate').textContent = `${winRate}%`;
+            };
         }
-        saveHabits();
-        saveHabitHistory();
-        renderHabits();
-        updateStats();
-        updateExtendedStats();
-    }
 
-    function deleteHabit(id) {
-        if (confirm('Are you sure you want to delete this habit?')) {
-            habits = habits.filter(h => h.id !== id);
-            saveHabits();
-            saveHabitHistory();
-            renderHabits();
-            updateStats();
-            updateExtendedStats();
+        function exportData() {
+            const transaction = db.transaction(['bets'], 'readonly');
+            const store = transaction.objectStore('bets');
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const data = {
+                    version: '1.0',
+                    exportedAt: new Date().toISOString(),
+                    bets: request.result
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `στοιχήματα_${new Date().toISOString().slice(0,10)}.paw`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
         }
-    }
 
-    function renderHabits() {
-        const container = document.getElementById('habitsList');
-        const emptyState = document.getElementById('emptyState');
-        
-        if (habits.length === 0) {
-            emptyState.style.display = 'block';
-            return;
-        }
-        
-        emptyState.style.display = 'none';
-        
-        const habitItems = habits.map(habit => `
-            <div class="habit-item ${habit.completed ? 'completed' : ''}">
-                <div class="habit-checkbox ${habit.completed ? 'checked' : ''}" 
-                     onclick="toggleHabit(${habit.id})"></div>
-                <div class="habit-text">${habit.text}</div>
-                <div class="habit-streak">${habit.streak} day${habit.streak !== 1 ? 's' : ''}</div>
-                <button class="delete-btn" onclick="deleteHabit(${habit.id})">✕</button>
-            </div>
-        `).join('');
-        
-        container.innerHTML = habitItems + emptyState.outerHTML;
-    }
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-    function updateStats() {
-        const totalHabits = habits.length;
-        const completedToday = habits.filter(h => h.completed).length;
-        
-        document.getElementById('totalHabits').textContent = totalHabits;
-        document.getElementById('completedToday').textContent = completedToday;
-    }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.bets || !Array.isArray(data.bets)) {
+                        throw new Error('Μη έγκυρο αρχείο .paw');
+                    }
 
-    function saveHabits() {
-        localStorage.setItem('habits', JSON.stringify(habits));
-    }
+                    const transaction = db.transaction(['bets'], 'readwrite');
+                    const store = transaction.objectStore('bets');
 
-    function saveHabitHistory() {
-        // Keep a history of completed habits for date-based stats
-        const today = new Date();
-        const isoDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
-        habitHistory[isoDate] = habits.map(h => ({
-            id: h.id,
-            completed: h.completed
-        }));
-        localStorage.setItem('habitHistory', JSON.stringify(habitHistory));
-    }
+                    data.bets.forEach(bet => {
+                        store.add({
+                            date: bet.date,
+                            stake: bet.stake,
+                            profit: bet.profit,
+                            createdAt: bet.createdAt || new Date().toISOString()
+                        });
+                    });
 
-    // Reset completion status daily (simplified version)
-    function checkNewDay() {
-        const today = new Date().toDateString();
-        const lastCheck = localStorage.getItem('lastCheck');
-        
-        if (lastCheck !== today) {
-            habits.forEach(habit => {
-                if (habit.lastCompleted !== today) {
-                    habit.completed = false;
+                    transaction.oncomplete = () => {
+                        loadBets();
+                        updateStats();
+                        alert('✅ Τα δεδομένα εισήχθησαν επιτυχώς!');
+                    };
+
+                } catch (err) {
+                    alert('❌ Σφάλμα κατά την εισαγωγή: ' + err.message);
                 }
+            };
+            reader.readAsText(file);
+            document.getElementById('fileInput').value = '';
+        }
+
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installButton').style.display = 'block';
+        });
+
+        document.getElementById('installButton').addEventListener('click', () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installButton').style.display = 'none';
+                });
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('date').valueAsDate = new Date();
+
+            document.getElementById('addBtn').addEventListener('click', () => {
+                const date = document.getElementById('date').value;
+                const stake = document.getElementById('stake').value;
+                const profit = document.getElementById('profit').value;
+
+                if (!date || !stake || !profit) {
+                    alert('Συμπλήρωσε όλα τα πεδία!');
+                    return;
+                }
+
+                addBet(date, stake, profit);
+
+                document.getElementById('stake').value = '';
+                document.getElementById('profit').value = '';
             });
-            saveHabits();
-            saveHabitHistory();
-            localStorage.setItem('lastCheck', today);
-            renderHabits();
-            updateStats();
-            updateExtendedStats();
-        }
-    }
 
-    // Check for new day every time app loads
-    checkNewDay();
-
-    // --- Extended stats: weekly & monthly ---
-    function updateExtendedStats() {
-        // Get today
-        const today = new Date();
-        const isoToday = today.toISOString().split('T')[0];
-
-        // Helper to get last N days in YYYY-MM-DD
-        function getPastDates(numDays) {
-            let dates = [];
-            for (let i = 0; i < numDays; i++) {
-                let d = new Date(today);
-                d.setDate(today.getDate() - i);
-                dates.push(d.toISOString().split('T')[0]);
-            }
-            return dates;
-        }
-
-        // Helper to get all days this month
-        function getMonthDates(dt) {
-            let year = dt.getFullYear(), month = dt.getMonth();
-            let dates = [];
-            let d = new Date(year, month, 1);
-            while (d.getMonth() === month) {
-                dates.push(d.toISOString().split('T')[0]);
-                d.setDate(d.getDate() + 1);
-            }
-            return dates;
-        }
-
-        // Week stats
-        const weekDates = getPastDates(7);
-        let completedWeek = 0;
-        let daysTrackedWeek = 0;
-        weekDates.forEach(dateStr => {
-            if (habitHistory[dateStr]) {
-                daysTrackedWeek++;
-                completedWeek += habitHistory[dateStr].filter(h => h.completed).length;
-            }
+            document.getElementById('exportBtn').addEventListener('click', exportData);
+            document.getElementById('importBtn').addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
+            document.getElementById('fileInput').addEventListener('change', importData);
         });
+    </script>
 
-        // Month stats
-        const monthDates = getMonthDates(today);
-        let completedMonth = 0;
-        let daysTrackedMonth = 0;
-        monthDates.forEach(dateStr => {
-            if (habitHistory[dateStr]) {
-                daysTrackedMonth++;
-                completedMonth += habitHistory[dateStr].filter(h => h.completed).length;
-            }
-        });
-
-        document.getElementById('completedWeek').textContent = completedWeek;
-        document.getElementById('daysTrackedWeek').textContent = daysTrackedWeek;
-        document.getElementById('completedMonth').textContent = completedMonth;
-        document.getElementById('daysTrackedMonth').textContent = daysTrackedMonth;
-    }
-
-    // ======== RESET FUNCTIONALITY ==========
-    function askReset() {
-        if (confirm('Θέλεις πραγματικά να κάνεις επαναφορά όλων των συνηθειών; Όλα θα διαγραφούν οριστικά!')) {
-            resetHabits();
-        }
-    }
-
-    function resetHabits() {
-        habits = [];
-        habitHistory = {};
-        localStorage.removeItem('habits');
-        localStorage.removeItem('habitHistory');
-        localStorage.removeItem('lastCheck');
-        renderHabits();
-        updateStats();
-        updateExtendedStats();
-    }
-</script>
-
-<!-- Manifest and Service Worker files would be separate files -->
-<script>
-    // Create manifest.json content
-    const manifestContent = {
-        "name": "Daily Habits Tracker",
-        "short_name": "Habits",
-        "description": "Track your daily habits and build better routines",
-        "start_url": "/",
-        "display": "standalone",
-        "theme_color": "#2563eb",
-        "background_color": "#ffffff",
-        "orientation": "portrait",
-        "categories": ["productivity", "lifestyle", "health"],
-        "icons": [
-            {
-                "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPS[...]
-                "sizes": "192x192",
-                "type": "image/svg+xml"
-            },
-            {
-                "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPS[...]
-                "sizes": "512x512",
-                "type": "image/svg+xml"
-            }
-        ]
-    };
-
-    // Create service worker content
-    const serviceWorkerContent = `
-        const CACHE_NAME = 'habits-tracker-v1';
-        const urlsToCache = [
-            '/',
-            '/index.html',
-            '/manifest.json'
-        ];
-
-        self.addEventListener('install', event => {
-            event.waitUntil(
-                caches.open(CACHE_NAME)
-                    .then(cache => cache.addAll(urlsToCache))
-            );
-        });
-
-        self.addEventListener('fetch', event => {
-            event.respondWith(
-                caches.match(event.request)
-                    .then(response => {
-                        if (response) {
-                            return response;
-                        }
-                        return fetch(event.request);
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
                     })
-            );
-        });
-    `;
-
-    // For development purposes, we'll create the files dynamically
-    console.log('Manifest content:', manifestContent);
-    console.log('Service Worker content ready');
-</script>
-
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
