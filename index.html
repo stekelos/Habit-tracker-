@@ -1,489 +1,197 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Στοιχηματικό Ημερολόγιο </title>
-    <meta name="description" content="Καταγραφή στοιχημάτων με μόνιμη αποθήκευση .paw">
-    <link rel="manifest" href="manifest.json">
-
-    <!-- iOS PWA Support -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Betting.paw">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="icon-192.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="icon-192.png">
-
-    <style>
-        :root {
-            --primary: #6e12f0;
-            --secondary: #ff3e78;
-            --bg: #fafafa;
-            --text: #333;
-            --success: #28a745;
-            --danger: #dc3545;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 16px;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 24px;
-            color: var(--primary);
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-
-        input, button {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
-            margin-top: 8px;
-        }
-
-        button:hover {
-            background: #5a0fcf;
-        }
-
-        .btn-secondary {
-            background: var(--secondary);
-        }
-
-        .btn-secondary:hover {
-            background: #e02d67;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 24px 0;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .profit { color: var(--success); font-weight: bold; }
-        .loss { color: var(--danger); font-weight: bold; }
-
-        .stats {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            margin: 24px 0;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-
-        .stat-label { font-weight: 600; }
-        .stat-value.profit { color: var(--success); }
-        .stat-value.loss { color: var(--danger); }
-
-        .delete-btn {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        .actions button {
-            flex: 1;
-        }
-
-        #installButton {
-            display: none;
-            background: #28a745;
-            margin-top: 16px;
-        }
-
-        @media (max-width: 600px) {
-            .container { padding: 16px; }
-            th, td { font-size: 14px; padding: 8px; }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Πράκτορας</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fff;
+      color: #000;
+      padding: 20px;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin: 12px 0;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #log {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 15px;
+    }
+    .suggestion {
+      background: #e6f4ea;
+      padding: 15px;
+      border-left: 4px solid #34a853;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .instructions {
+      color: #555;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🐾 Στοιχηματικό </h1>
+  <h1>Πράκτορας: Κειμενικός Οδηγός</h1>
 
-        <div class="form-group">
-            <label for="date">Ημερομηνία:</label>
-            <input type="date" id="date" required>
-        </div>
+  <button id="btnAdd">+ Τον είδα τώρα</button>
+  <button id="btnCheck">✓ Κοίταξα — δεν ήταν εκεί</button>
+  <button id="btnReset">🗑️ Reset (3 φορές)</button>
 
-        <div class="form-group">
-            <label for="stake">Ποντάρισμα (€):</label>
-            <input type="number" id="stake" step="0.01" min="0.01" placeholder="π.χ. 10.50" required>
-        </div>
+  <div id="suggestion" class="suggestion">Φόρτωση...</div>
 
-        <div class="form-group">
-            <label for="profit">Κέρδος/Ζημία (€):</label>
-            <input type="number" id="profit" step="0.01" placeholder="π.χ. 15.75 ή -10.50" required>
-        </div>
+  <div id="log"></div>
 
-        <button id="addBtn">Προσθήκη Στοιχήματος</button>
+  <div class="instructions">
+    • Πάτησε «Τον είδα τώρα» τη στιγμή που τον βλέπεις.<br>
+    • Το σύστημα θυμάται την ώρα και την ημέρα.<br>
+    • Σου προτείνει την επόμενη καλύτερη στιγμή για παρατήρηση.
+  </div>
 
-        <div class="actions">
-            <button id="exportBtn" class="btn-secondary">💾 Εξαγωγή .paw</button>
-            <button id="importBtn" class="btn-secondary">📂 Εισαγωγή .paw</button>
-        </div>
+  <script>
+    const days = ["Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"];
+    let resetCount = 0;
 
-        <input type="file" id="fileInput" accept=".paw" style="display: none">
+    // Φόρτωση ή αρχικοποίηση
+    let data = JSON.parse(localStorage.getItem('agent_txt')) || {
+      observations: [], // { dayIndex, hour, type: 'seen' | 'checked' }
+      log: []
+    };
 
-        <div class="stats" id="statsBox">
-            <h3>📈 Στατιστικά</h3>
-            <div class="stat-row">
-                <span class="stat-label">Σύνολο Στοιχημάτων:</span>
-                <span class="stat-value" id="totalBets">0</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Συνολικό Κέρδος:</span>
-                <span class="stat-value" id="totalProfit">€0.00</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Συνολικό Ποντάρισμα:</span>
-                <span class="stat-value" id="totalStake">€0.00</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">ROI:</span>
-                <span class="stat-value" id="roi">0%</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Μέσο Κέρδος/Ζημία:</span>
-                <span class="stat-value" id="avgProfit">€0.00</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Νικηφόρα:</span>
-                <span class="stat-value" id="wins">0</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Ποσοστό Επιτυχίας:</span>
-                <span class="stat-value" id="winRate">0%</span>
-            </div>
-        </div>
+    function save() {
+      localStorage.setItem('agent_txt', JSON.stringify(data));
+    }
 
-        <h3>📋 Ιστορικό</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Ημερομηνία</th>
-                    <th>Ποντάρισμα</th>
-                    <th>Κέρδος</th>
-                    <th>Δράση</th>
-                </tr>
-            </thead>
-            <tbody id="betsList"></tbody>
-        </table>
+    function now() {
+      const d = new Date();
+      return {
+        dayIndex: d.getDay() === 0 ? 6 : d.getDay() - 1, // Δευ=0
+        hour: d.getHours()
+      };
+    }
 
-        <button id="installButton">➕ Εγκατάσταση Εφαρμογής</button>
-    </div>
+    function formatTime(entry) {
+      const day = days[entry.dayIndex];
+      const hour = entry.hour.toString().padStart(2, '0');
+      const type = entry.type === 'seen' ? 'ΤΟΝ ΕΙΔΑ' : 'ΔΕΝ ΗΤΑΝ';
+      return `${day} ${hour}:00 → ${type}`;
+    }
 
-    <script>
-        let db;
+    function findPattern() {
+      const seen = data.observations.filter(e => e.type === 'seen');
+      if (seen.length === 0) return null;
 
-        const request = indexedDB.open('BettingPAW', 1);
+      // Αν έχεις 1 παρατήρηση: πρότεινε επόμενη μέρα, ίδια ώρα
+      if (seen.length === 1) {
+        const last = seen[0];
+        const nextDay = (last.dayIndex + 1) % 7;
+        return { dayIndex: nextDay, hour: last.hour, reason: "1η παρατήρηση" };
+      }
 
-        request.onerror = () => {
-            console.error('IndexedDB error:', request.error);
-            alert('Σφάλμα αποθήκευσης. Η εφαρμογή μπορεί να μη λειτουργεί σωστά.');
-        };
+      // Αν έχεις ≥2: ψάξε για διαφορά ωρών/ημερών
+      const last = seen[seen.length - 1];
+      const prev = seen[seen.length - 2];
 
-        request.onupgradeneeded = (event) => {
-            db = event.target.result;
-            if (!db.objectStoreNames.contains('bets')) {
-                const store = db.createObjectStore('bets', { keyPath: 'id', autoIncrement: true });
-                store.createIndex('date', 'date', { unique: false });
-            }
-        };
+      const dayDiff = (last.dayIndex - prev.dayIndex + 7) % 7;
+      const hourDiff = last.hour - prev.hour;
 
-        request.onsuccess = (event) => {
-            db = event.target.result;
-            loadBets();
-            updateStats();
-        };
+      // Αν ίδια ώρα, διαφορετική μέρα → πρόβλεψε επόμενη μέρα
+      if (hourDiff === 0 && dayDiff > 0) {
+        const nextDay = (last.dayIndex + dayDiff) % 7;
+        return { dayIndex: nextDay, hour: last.hour, reason: `ρυθμός: κάθε ${dayDiff} ημέρες` };
+      }
 
-        function addBet(date, stake, profit) {
-            const transaction = db.transaction(['bets'], 'readwrite');
-            const store = transaction.objectStore('bets');
-
-            store.add({
-                date,
-                stake: parseFloat(stake),
-                profit: parseFloat(profit),
-                createdAt: new Date().toISOString()
-            });
-
-            transaction.oncomplete = () => {
-                loadBets();
-                updateStats();
-            };
+      // Αν ίδια μέρα, διαφορετική ώρα → πρόβλεψε επόμενη ώρα
+      if (dayDiff === 0 && hourDiff !== 0) {
+        const nextHour = last.hour + hourDiff;
+        if (nextHour >= 0 && nextHour < 24) {
+          return { dayIndex: last.dayIndex, hour: nextHour, reason: `ρυθμός: κάθε ${hourDiff} ώρες` };
         }
+      }
 
-        function deleteBet(id) {
-            const transaction = db.transaction(['bets'], 'readwrite');
-            const store = transaction.objectStore('bets');
-            store.delete(id);
+      // Αλλιώς: επόμενη μέρα, ίδια ώρα
+      const nextDay = (last.dayIndex + 1) % 7;
+      return { dayIndex: nextDay, hour: last.hour, reason: "προεπιλογή" };
+    }
 
-            transaction.oncomplete = () => {
-                loadBets();
-                updateStats();
-            };
-        }
+    function getBestNext() {
+      const pattern = findPattern();
+      if (!pattern) return "Δεν έχεις δει τον στόχο ακόμα. Παρατήρησέ τον πρώτα.";
 
-        function loadBets() {
-            const transaction = db.transaction(['bets'], 'readonly');
-            const store = transaction.objectStore('bets');
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                renderBets(request.result);
-            };
-        }
-
-        function renderBets(bets) {
-            const list = document.getElementById('betsList');
-            list.innerHTML = '';
-
-            bets.forEach(bet => {
-                const row = document.createElement('tr');
-                const profitClass = bet.profit >= 0 ? 'profit' : 'loss';
-                const profitText = bet.profit >= 0 ? `+${bet.profit.toFixed(2)}€` : `${bet.profit.toFixed(2)}€`;
-
-                row.innerHTML = `
-                    <td>${bet.date}</td>
-                    <td>${bet.stake.toFixed(2)}€</td>
-                    <td class="${profitClass}">${profitText}</td>
-                    <td><button class="delete-btn" data-id="${bet.id}">🗑️</button></td>
-                `;
-                list.appendChild(row);
-            });
-
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = parseInt(e.target.getAttribute('data-id'));
-                    deleteBet(id);
-                });
-            });
-        }
-
-        function updateStats() {
-            const transaction = db.transaction(['bets'], 'readonly');
-            const store = transaction.objectStore('bets');
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                const bets = request.result;
-                const totalBets = bets.length;
-                const totalProfit = bets.reduce((sum, bet) => sum + bet.profit, 0);
-                const totalStake = bets.reduce((sum, bet) => sum + bet.stake, 0);
-                const wins = bets.filter(bet => bet.profit > 0).length;
-                const winRate = totalBets > 0 ? ((wins / totalBets) * 100).toFixed(1) : 0;
-                const roi = totalStake > 0 ? ((totalProfit / totalStake) * 100).toFixed(2) : 0;
-                const avgProfit = totalBets > 0 ? (totalProfit / totalBets).toFixed(2) : 0;
-
-                document.getElementById('totalBets').textContent = totalBets;
-                document.getElementById('totalProfit').textContent = totalProfit >= 0 ? 
-                    `+${totalProfit.toFixed(2)}€` : `${totalProfit.toFixed(2)}€`;
-                document.getElementById('totalProfit').className = totalProfit >= 0 ? 'profit' : 'loss';
-                document.getElementById('totalStake').textContent = `${totalStake.toFixed(2)}€`;
-                document.getElementById('roi').textContent = `${roi}%`;
-                document.getElementById('avgProfit').textContent = `${avgProfit}€`;
-                document.getElementById('wins').textContent = wins;
-                document.getElementById('winRate').textContent = `${winRate}%`;
-            };
-        }
-
-        function exportData() {
-            const transaction = db.transaction(['bets'], 'readonly');
-            const store = transaction.objectStore('bets');
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                const data = {
-                    version: '1.0',
-                    exportedAt: new Date().toISOString(),
-                    bets: request.result
-                };
-
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `στοιχήματα_${new Date().toISOString().slice(0,10)}.paw`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            };
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (!data.bets || !Array.isArray(data.bets)) {
-                        throw new Error('Μη έγκυρο αρχείο .paw');
-                    }
-
-                    const transaction = db.transaction(['bets'], 'readwrite');
-                    const store = transaction.objectStore('bets');
-
-                    data.bets.forEach(bet => {
-                        store.add({
-                            date: bet.date,
-                            stake: bet.stake,
-                            profit: bet.profit,
-                            createdAt: bet.createdAt || new Date().toISOString()
-                        });
-                    });
-
-                    transaction.oncomplete = () => {
-                        loadBets();
-                        updateStats();
-                        alert('✅ Τα δεδομένα εισήχθησαν επιτυχώς!');
-                    };
-
-                } catch (err) {
-                    alert('❌ Σφάλμα κατά την εισαγωγή: ' + err.message);
-                }
-            };
-            reader.readAsText(file);
-            document.getElementById('fileInput').value = '';
-        }
-
-        let deferredPrompt;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('installButton').style.display = 'block';
+      // Αποφυγή πρόσφατα ελεγμένων ωρών (checked)
+      const recentlyChecked = new Set();
+      data.observations
+        .filter(e => e.type === 'checked')
+        .slice(-5) // τελευταίοι 5 έλεγχοι
+        .forEach(e => {
+          recentlyChecked.add(`${e.dayIndex}-${e.hour}`);
         });
 
-        document.getElementById('installButton').addEventListener('click', () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                    }
-                    deferredPrompt = null;
-                    document.getElementById('installButton').style.display = 'none';
-                });
-            }
-        });
+      let candidate = pattern;
+      let attempts = 0;
+      while (recentlyChecked.has(`${candidate.dayIndex}-${candidate.hour}`) && attempts < 24) {
+        candidate.hour = (candidate.hour + 1) % 24;
+        if (candidate.hour === 0) candidate.dayIndex = (candidate.dayIndex + 1) % 7;
+        attempts++;
+      }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('date').valueAsDate = new Date();
+      const day = days[candidate.dayIndex];
+      const hour = candidate.hour.toString().padStart(2, '0');
+      return `Πρόταση: ${day} ${hour}:00 (${candidate.reason})`;
+    }
 
-            document.getElementById('addBtn').addEventListener('click', () => {
-                const date = document.getElementById('date').value;
-                const stake = document.getElementById('stake').value;
-                const profit = document.getElementById('profit').value;
+    function addObservation(type) {
+      const n = now();
+      data.observations.push({ ...n, type });
+      data.log.unshift(formatTime({ ...n, type }));
+      if (data.log.length > 20) data.log.pop();
+      save();
+      updateUI();
+    }
 
-                if (!date || !stake || !profit) {
-                    alert('Συμπλήρωσε όλα τα πεδία!');
-                    return;
-                }
+    function updateUI() {
+      document.getElementById('suggestion').textContent = getBestNext();
+      document.getElementById('log').textContent = data.log.join('\n');
+    }
 
-                addBet(date, stake, profit);
+    // Κουμπιά
+    document.getElementById('btnAdd').addEventListener('click', () => addObservation('seen'));
+    document.getElementById('btnCheck').addEventListener('click', () => addObservation('checked'));
 
-                document.getElementById('stake').value = '';
-                document.getElementById('profit').value = '';
-            });
-
-            document.getElementById('exportBtn').addEventListener('click', exportData);
-            document.getElementById('importBtn').addEventListener('click', () => {
-                document.getElementById('fileInput').click();
-            });
-            document.getElementById('fileInput').addEventListener('change', importData);
-        });
-    </script>
-
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
+    document.getElementById('btnReset').addEventListener('click', () => {
+      resetCount++;
+      if (resetCount >= 3) {
+        if (confirm('Να διαγραφούν όλα τα δεδομένα;')) {
+          localStorage.removeItem('agent_txt');
+          data = { observations: [], log: [] };
+          updateUI();
         }
-    </script>
+        resetCount = 0;
+      }
+    });
+
+    updateUI();
+  </script>
 </body>
 </html>
