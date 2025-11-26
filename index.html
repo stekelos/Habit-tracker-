@@ -6,7 +6,7 @@
   <title>Πράκτορας</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #fff;
       color: #000;
       padding: 20px;
@@ -17,6 +17,7 @@
     h1 {
       font-size: 22px;
       margin-bottom: 20px;
+      color: #1a202c;
     }
     button {
       display: block;
@@ -26,172 +27,189 @@
       font-size: 18px;
       font-weight: bold;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
+      transition: opacity 0.2s;
     }
     #log {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 10px;
       margin: 20px 0;
       white-space: pre-wrap;
       font-family: monospace;
       font-size: 15px;
+      border: 1px solid #e2e8f0;
     }
     .suggestion {
-      background: #e6f4ea;
-      padding: 15px;
-      border-left: 4px solid #34a853;
+      background: #f0fdf4;
+      padding: 16px;
+      border-radius: 10px;
       margin: 20px 0;
       font-weight: bold;
+      color: #166534;
+      border: 1px solid #bbf7d0;
     }
     .instructions {
-      color: #555;
+      color: #64748b;
       font-size: 14px;
       margin-top: 20px;
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
-  <h1>Πράκτορας: Κειμενικός Οδηγός</h1>
+  <h1>Πράκτορας: Ακριβής Καταγραφή</h1>
 
-  <button id="btnAdd">+ Τον είδα τώρα</button>
-  <button id="btnCheck">✓ Κοίταξα — δεν ήταν εκεί</button>
+  <button id="btnSeen">👁️ Τον είδα τώρα (με λεπτά)</button>
+  <button id="btnChecked">🔍 Κοίταξα — δεν ήταν εκεί</button>
   <button id="btnReset">🗑️ Reset (3 φορές)</button>
 
-  <div id="suggestion" class="suggestion">Φόρτωση...</div>
+  <div id="suggestion" class="suggestion">Ανάλυση δεδομένων...</div>
 
   <div id="log"></div>
 
   <div class="instructions">
-    • Πάτησε «Τον είδα τώρα» τη στιγμή που τον βλέπεις.<br>
-    • Το σύστημα θυμάται την ώρα και την ημέρα.<br>
-    • Σου προτείνει την επόμενη καλύτερη στιγμή για παρατήρηση.
+    • Πάτησε «Τον είδα τώρα» την ακριβή στιγμή που τον βλέπεις.<br>
+    • Το σύστημα καταγράφει: <strong>ημέρα, ώρα, λεπτά</strong>.<br>
+    • Σου προτείνει την <strong>επόμενη πιο πιθανή στιγμή</strong> βάσει ρυθμού.
   </div>
 
   <script>
-    const days = ["Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"];
+    const DAYS = ["Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο", "Κυριακή"];
     let resetCount = 0;
 
     // Φόρτωση ή αρχικοποίηση
-    let data = JSON.parse(localStorage.getItem('agent_txt')) || {
-      observations: [], // { dayIndex, hour, type: 'seen' | 'checked' }
+    let DB = JSON.parse(localStorage.getItem('agent_v3')) || {
+      events: [], // { day, hour, minute, type: 'seen'|'checked', timestamp }
       log: []
     };
 
     function save() {
-      localStorage.setItem('agent_txt', JSON.stringify(data));
+      localStorage.setItem('agent_v3', JSON.stringify(DB));
     }
 
     function now() {
       const d = new Date();
       return {
-        dayIndex: d.getDay() === 0 ? 6 : d.getDay() - 1, // Δευ=0
-        hour: d.getHours()
+        day: d.getDay() === 0 ? 6 : d.getDay() - 1, // Δευ = 0
+        hour: d.getHours(),
+        minute: d.getMinutes()
       };
     }
 
-    function formatTime(entry) {
-      const day = days[entry.dayIndex];
-      const hour = entry.hour.toString().padStart(2, '0');
-      const type = entry.type === 'seen' ? 'ΤΟΝ ΕΙΔΑ' : 'ΔΕΝ ΗΤΑΝ';
-      return `${day} ${hour}:00 → ${type}`;
+    function formatEntry(e) {
+      const day = DAYS[e.day];
+      const time = `${e.hour.toString().padStart(2, '0')}:${e.minute.toString().padStart(2, '0')}`;
+      const action = e.type === 'seen' ? 'ΤΟΝ ΕΙΔΑ' : 'ΔΕΝ ΗΤΑΝ';
+      return `${day} ${time} → ${action}`;
     }
 
-    function findPattern() {
-      const seen = data.observations.filter(e => e.type === 'seen');
-      if (seen.length === 0) return null;
+    function totalMinutes(day, hour, minute) {
+      return day * 24 * 60 + hour * 60 + minute;
+    }
 
-      // Αν έχεις 1 παρατήρηση: πρότεινε επόμενη μέρα, ίδια ώρα
-      if (seen.length === 1) {
-        const last = seen[0];
-        const nextDay = (last.dayIndex + 1) % 7;
-        return { dayIndex: nextDay, hour: last.hour, reason: "1η παρατήρηση" };
+    function fromTotalMinutes(total) {
+      const day = Math.floor(total / (24 * 60)) % 7;
+      const hour = Math.floor((total % (24 * 60)) / 60);
+      const minute = total % 60;
+      return { day, hour, minute };
+    }
+
+    function predictNext() {
+      const seen = DB.events.filter(e => e.type === 'seen');
+      if (seen.length === 0) {
+        return "Δεν έχεις δει τον στόχο ακόμα. Κάνε παρατήρηση πρώτα.";
       }
 
-      // Αν έχεις ≥2: ψάξε για διαφορά ωρών/ημερών
+      // Αν μόνο 1 παρατήρηση: πρότεινε +24 ώρες (αύριο ίδια ώρα/λεπτό)
+      if (seen.length === 1) {
+        const last = seen[0];
+        const next = {
+          day: (last.day + 1) % 7,
+          hour: last.hour,
+          minute: last.minute
+        };
+        return formatSuggestion(next, "1η εμφάνιση → αύριο");
+      }
+
+      // Αν ≥2: υπολόγισε διαφορά σε λεπτά
       const last = seen[seen.length - 1];
       const prev = seen[seen.length - 2];
 
-      const dayDiff = (last.dayIndex - prev.dayIndex + 7) % 7;
-      const hourDiff = last.hour - prev.hour;
+      const t1 = totalMinutes(prev.day, prev.hour, prev.minute);
+      const t2 = totalMinutes(last.day, last.hour, last.minute);
+      const diff = t2 - t1;
 
-      // Αν ίδια ώρα, διαφορετική μέρα → πρόβλεψε επόμενη μέρα
-      if (hourDiff === 0 && dayDiff > 0) {
-        const nextDay = (last.dayIndex + dayDiff) % 7;
-        return { dayIndex: nextDay, hour: last.hour, reason: `ρυθμός: κάθε ${dayDiff} ημέρες` };
+      if (diff <= 0) {
+        // Ασυνεπής ρυθμός → αύριο
+        const next = { day: (last.day + 1) % 7, hour: last.hour, minute: last.minute };
+        return formatSuggestion(next, "ασαφής ρυθμός → αύριο");
       }
 
-      // Αν ίδια μέρα, διαφορετική ώρα → πρόβλεψε επόμενη ώρα
-      if (dayDiff === 0 && hourDiff !== 0) {
-        const nextHour = last.hour + hourDiff;
-        if (nextHour >= 0 && nextHour < 24) {
-          return { dayIndex: last.dayIndex, hour: nextHour, reason: `ρυθμός: κάθε ${hourDiff} ώρες` };
-        }
-      }
+      // Πρόβλεψη επόμενης στιγμής
+      const nextTotal = t2 + diff;
+      const next = fromTotalMinutes(nextTotal);
 
-      // Αλλιώς: επόμενη μέρα, ίδια ώρα
-      const nextDay = (last.dayIndex + 1) % 7;
-      return { dayIndex: nextDay, hour: last.hour, reason: "προεπιλογή" };
-    }
-
-    function getBestNext() {
-      const pattern = findPattern();
-      if (!pattern) return "Δεν έχεις δει τον στόχο ακόμα. Παρατήρησέ τον πρώτα.";
-
-      // Αποφυγή πρόσφατα ελεγμένων ωρών (checked)
-      const recentlyChecked = new Set();
-      data.observations
+      // Αποφυγή πρόσφατων "checked"
+      const recentChecked = new Set();
+      DB.events
         .filter(e => e.type === 'checked')
-        .slice(-5) // τελευταίοι 5 έλεγχοι
+        .slice(-8)
         .forEach(e => {
-          recentlyChecked.add(`${e.dayIndex}-${e.hour}`);
+          recentChecked.add(`${e.day}-${e.hour}-${e.minute}`);
         });
 
-      let candidate = pattern;
       let attempts = 0;
-      while (recentlyChecked.has(`${candidate.dayIndex}-${candidate.hour}`) && attempts < 24) {
-        candidate.hour = (candidate.hour + 1) % 24;
-        if (candidate.hour === 0) candidate.dayIndex = (candidate.dayIndex + 1) % 7;
+      while (recentChecked.has(`${next.day}-${next.hour}-${next.minute}`) && attempts < 30) {
+        next.minute = (next.minute + 5) % 60;
+        if (next.minute === 0) {
+          next.hour = (next.hour + 1) % 24;
+          if (next.hour === 0) next.day = (next.day + 1) % 7;
+        }
         attempts++;
       }
 
-      const day = days[candidate.dayIndex];
-      const hour = candidate.hour.toString().padStart(2, '0');
-      return `Πρόταση: ${day} ${hour}:00 (${candidate.reason})`;
+      return formatSuggestion(next, `ρυθμός: κάθε ${Math.round(diff / 60)} ώρες και ${diff % 60} λεπτά`);
     }
 
-    function addObservation(type) {
+    function formatSuggestion({ day, hour, minute }, reason) {
+      const dayName = DAYS[day];
+      const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      return `Πρόταση: ${dayName} ${time} (${reason})`;
+    }
+
+    function addEvent(type) {
       const n = now();
-      data.observations.push({ ...n, type });
-      data.log.unshift(formatTime({ ...n, type }));
-      if (data.log.length > 20) data.log.pop();
+      DB.events.push({ ...n, type, timestamp: Date.now() });
+      DB.log.unshift(formatEntry({ ...n, type }));
+      if (DB.log.length > 20) DB.log.pop();
       save();
-      updateUI();
+      render();
     }
 
-    function updateUI() {
-      document.getElementById('suggestion').textContent = getBestNext();
-      document.getElementById('log').textContent = data.log.join('\n');
+    function render() {
+      document.getElementById('suggestion').textContent = predictNext();
+      document.getElementById('log').textContent = DB.log.join('\n');
     }
 
     // Κουμπιά
-    document.getElementById('btnAdd').addEventListener('click', () => addObservation('seen'));
-    document.getElementById('btnCheck').addEventListener('click', () => addObservation('checked'));
+    document.getElementById('btnSeen').addEventListener('click', () => addEvent('seen'));
+    document.getElementById('btnChecked').addEventListener('click', () => addEvent('checked'));
 
     document.getElementById('btnReset').addEventListener('click', () => {
       resetCount++;
       if (resetCount >= 3) {
-        if (confirm('Να διαγραφούν όλα τα δεδομένα;')) {
-          localStorage.removeItem('agent_txt');
-          data = { observations: [], log: [] };
-          updateUI();
+        if (confirm('Να διαγραφούν ΟΛΑ τα δεδομένα;')) {
+          localStorage.removeItem('agent_v3');
+          DB = { events: [], log: [] };
+          render();
         }
         resetCount = 0;
       }
     });
 
-    updateUI();
+    render();
   </script>
 </body>
 </html>
